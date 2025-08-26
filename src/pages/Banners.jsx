@@ -1,13 +1,13 @@
 import PageHeader from '../components/PageHeader'
 import PageFooter from '../components/PageFooter'
-import { FiList } from 'react-icons/fi'
+import { FiImage } from 'react-icons/fi'
 
 const Banners = () => {
   return (
     <div className="flex flex-col justify-between h-full">
       <div>
-        <PageHeader title="Menú" icon={<FiList />} />
-        <p>Contenido del menú...</p>
+        <PageHeader title="BANNERS" icon={<FiImage />} />
+        <p>Contenido del BANNERS...</p>
       </div>
 
       <PageFooter

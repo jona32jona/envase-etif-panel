@@ -1,13 +1,13 @@
 import PageHeader from '../components/PageHeader'
 import PageFooter from '../components/PageFooter'
-import { FiBox } from 'react-icons/fi'
+import { FiMapPin } from 'react-icons/fi'
 
 const ComoLlegar = () => {
   return (
     <div className="flex flex-col justify-between h-full">
       <div>
-        <PageHeader title="Pedidos" icon={<FiBox />} />
-        <p>Contenido de pedidos...</p>
+        <PageHeader title="COMO LLEGAR" icon={<FiMapPin />} />
+        <p>Contenido de COMO LLEGAR...</p>
       </div>
 
       <PageFooter
