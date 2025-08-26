@@ -1,6 +1,12 @@
 import {
-  FiHome, FiUsers, FiList, FiBox, FiBell,
-  FiPieChart, FiLogOut
+  FiBriefcase,
+  FiUsers,
+  FiCalendar,
+  FiImage,
+  FiMapPin,
+  FiBell,
+  FiPieChart,
+  FiLogOut,
 } from 'react-icons/fi'
 
 const sidebarConfig = [
@@ -8,30 +14,36 @@ const sidebarConfig = [
     title: 'Gestión',
     items: [
       {
-        to: '/empresas',
-        label: 'EMPRESAS',
-        icon: FiHome,
+        to: '/expositores',
+        label: 'EXPOSITORES',
+        icon: FiBriefcase,
         roles: ['admin'],
       },
       {
-        to: '/empleados',
-        label: 'EMPLEADOS',
+        to: '/expositores_usuarios',
+        label: 'EXPOSITORES USUARIOS',
         icon: FiUsers,
         roles: ['admin'],
       },
       {
-        to: '/menu',
-        label: 'MENU',
-        icon: FiList,
+        to: '/agenda',
+        label: 'AGENDA',
+        icon: FiCalendar,
+        roles: ['admin'],
+      },
+      {
+        to: '/banners',
+        label: 'BANNERS',
+        icon: FiImage,
         roles: ['admin', 'usuario'],
       },
       {
-        to: '/pedidos',
-        label: 'PEDIDOS',
-        icon: FiBox,
+        to: '/comollegar',
+        label: 'COMO LLEGAR',
+        icon: FiMapPin,
         roles: ['admin', 'usuario'],
       },
-    ]
+    ],
   },
   {
     title: 'Notificaciones',
@@ -41,8 +53,8 @@ const sidebarConfig = [
         label: 'NOTIFICACIONES',
         icon: FiBell,
         roles: ['admin', 'usuario'],
-      }
-    ]
+      },
+    ],
   },
   {
     title: 'Análisis',
@@ -51,15 +63,15 @@ const sidebarConfig = [
         to: '/reportes',
         label: 'REPORTES',
         icon: FiPieChart,
-        roles: ['admin']
+        roles: ['admin'],
       },
       {
         to: '/reportesotros',
         label: 'REPORTES OTROS',
         icon: FiPieChart,
-        roles: ['admin']
-      }
-    ]
+        roles: ['admin'],
+      },
+    ],
   },
   {
     title: 'Sesión',
@@ -69,9 +81,9 @@ const sidebarConfig = [
         label: 'SALIR',
         icon: FiLogOut,
         roles: ['admin', 'usuario'],
-      }
-    ]
-  }
+      },
+    ],
+  },
 ]
 
 export default sidebarConfig

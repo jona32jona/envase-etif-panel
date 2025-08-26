@@ -3,10 +3,11 @@ import Login from './pages/Login'
 import DashboardLayout from './pages/DashboardLayout'
 import { useAuth } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
-import Empresas from './pages/Empresas'
-import Empleados from './pages/Empleados'
-import Menu from './pages/Menu'
-import Pedidos from './pages/Pedidos'
+import Expositores from './pages/Expositores'
+import ExpositoresUsuarios from './pages/ExpositoresUsuarios'
+import Agenda from './pages/Agenda'
+import Banners from './pages/Banners'
+import ComoLlegar from './pages/ComoLlegar'
 import Notificaciones from './pages/Notificaciones'
 import Reportes from './pages/Reportes'
 import ReportesOtros from './pages/ReportesOtros'
@@ -19,19 +20,35 @@ function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
 
-      <Route path="/" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-        <Route path="empresas" element={<Empresas />} />
-        <Route path="empleados" element={<Empleados />} />
-        <Route path="menu" element={<Menu />} />
-        <Route path="pedidos" element={<Pedidos />} />
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        {/* 👇 index manda a expositores y NO deja historia */}
+        <Route index element={<Navigate to="expositores" replace />} />
+
+        <Route path="expositores" element={<Expositores />} />
+        <Route path="expositores_usuarios" element={<ExpositoresUsuarios />} />
+        <Route path="agenda" element={<Agenda />} />
+        <Route path="banners" element={<Banners />} />
+        <Route path="comollegar" element={<ComoLlegar />} />
         <Route path="notificaciones" element={<Notificaciones />} />
         <Route path="reportes" element={<Reportes />} />
         <Route path="reportesotros" element={<ReportesOtros />} />
         <Route path="salir" element={<Logout />} />
-        <Route index element={<Navigate to="empresas" />} />
       </Route>
 
-      <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} />} />
+      {/* 👇 si hay mismatch, mandá a una ruta VÁLIDA, no a "/" */}
+      <Route
+        path="*"
+        element={
+          <Navigate to={isAuthenticated ? '/expositores' : '/login'} replace />
+        }
+      />
     </Routes>
   )
 }

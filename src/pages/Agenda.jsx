@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useLayoutEffect } from 'react'
 import PageHeader from '../components/PageHeader'
 import PageFooter from '../components/PageFooter'
 import SectionView from '../components/SectionView'
-import { FiUsers, FiBarChart2 } from 'react-icons/fi'
+import { FiCalendar, FiBarChart2 } from 'react-icons/fi'
 import { useModal } from '../context/ModalContext'
 import ChartView from '../components/views/ChartView'
 import EmpleadoFormModal from '../components/EmpleadoFormModal'
@@ -37,7 +37,7 @@ const empleadosRandom = empresasArray.map((empresa, i) => ({
   empresa
 }))
 
-const Empleados = () => {
+const Agenda = () => {
   const { t } = useTranslation()
   const { show, hide } = useLoading()
   const [footerHeight, setFooterHeight] = useState(0)
@@ -160,8 +160,8 @@ const handleDeleteEmpleado = (empleado) => {
     <div className="flex flex-col h-full text-text">
       <div className="p-4">
         <PageHeader
-          title={t('Empleados')}
-          icon={<FiUsers />}
+          title={t('Agenda')}
+          icon={<FiCalendar />}
         />
         <p className="text-text_secondary mt-2">
           {'Lista de empleados registrados'}
@@ -204,4 +204,4 @@ const handleDeleteEmpleado = (empleado) => {
   )
 }
 
-export default Empleados
+export default Agenda

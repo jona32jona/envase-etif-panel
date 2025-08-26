@@ -1,20 +1,20 @@
 import PageHeader from '../components/PageHeader'
 import PageFooter from '../components/PageFooter'
-import { FiList } from 'react-icons/fi'
+import { FiBox } from 'react-icons/fi'
 
-const Menu = () => {
+const ComoLlegar = () => {
   return (
     <div className="flex flex-col justify-between h-full">
       <div>
-        <PageHeader title="Menú" icon={<FiList />} />
-        <p>Contenido del menú...</p>
+        <PageHeader title="Pedidos" icon={<FiBox />} />
+        <p>Contenido de pedidos...</p>
       </div>
 
       <PageFooter
         showBtn1={true}
-        btn1Text="Agregar"
+        btn1Text="Nuevo Pedido"
         showBtn2={true}
-        btn2Text="Guardar"
+        btn2Text="Confirmar"
         showBtn3={true}
         btn3Text="Cancelar"
       />
@@ -22,4 +22,4 @@ const Menu = () => {
   )
 }
 
-export default Menu
+export default ComoLlegar

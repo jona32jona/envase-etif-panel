@@ -6,20 +6,20 @@ import LanguageDetector from 'i18next-browser-languagedetector'
 const resources = {
   en: {
     translation: {
-      header_empresas: "Companies",
+      header_expositores: "Companies",
       btn_nuevo: "New",
       btn_guardar: "Save",
       btn_cancelar: "Cancel",
-      content_empresas: "Companies content..."
+      content_expositores: "Companies content..."
     }
   },
   es: {
     translation: {
-      header_empresas: "Empresas",
+      header_expositores: "Expositores",
       btn_nuevo: "Nuevo",
       btn_guardar: "Guardar",
       btn_cancelar: "Cancelar",
-      content_empresas: "Contenido de empresas..."
+      content_expositores: "Lista de expositores..."
     }
   }
 }
