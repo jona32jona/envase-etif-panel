@@ -1,12 +1,14 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { FiChevronDown, FiChevronUp, FiSearch, FiEdit2, FiTrash2 } from 'react-icons/fi'
+import {
+  FiChevronDown, FiChevronUp, FiSearch, FiEdit2, FiTrash2,
+  FiChevronsLeft, FiChevronsRight, FiChevronLeft, FiChevronRight
+} from 'react-icons/fi'
 
 // Simple helper para detectar touch devices
 const isTouchDevice = () =>
   typeof window !== "undefined" &&
   ("ontouchstart" in window || navigator.maxTouchPoints > 0)
 
-  
 const TableView = ({ config, rowsPerPage: defaultRowsPerPage = 20 }) => {
   const [page, setPage] = useState(0)
   const [sort, setSort] = useState({ column: null, asc: true })
@@ -18,7 +20,7 @@ const TableView = ({ config, rowsPerPage: defaultRowsPerPage = 20 }) => {
 
   const touchMode = isTouchDevice()
 
-   // --- 👇 Ajustar rowsPerPage dinámicamente ---
+  // --- Ajustar rowsPerPage dinámicamente ---
   useEffect(() => {
     const calcRowsPerPage = () => {
       const rowHeight = 40 // Estimado en px
@@ -33,8 +35,7 @@ const TableView = ({ config, rowsPerPage: defaultRowsPerPage = 20 }) => {
     return () => window.removeEventListener('resize', calcRowsPerPage)
   }, [])
 
-
-  // Filtrado, orden, paginado igual que antes...
+  // Filtrado
   const filteredRows = useMemo(() => {
     if (!search.trim()) return config?.rows || []
     return (config?.rows || []).filter(row =>
@@ -44,6 +45,7 @@ const TableView = ({ config, rowsPerPage: defaultRowsPerPage = 20 }) => {
     )
   }, [search, config])
 
+  // Orden
   const sortedRows = useMemo(() => {
     if (!sort.column) return filteredRows
     const col = sort.column
@@ -54,9 +56,14 @@ const TableView = ({ config, rowsPerPage: defaultRowsPerPage = 20 }) => {
     })
   }, [filteredRows, sort])
 
-  const totalPages = Math.ceil(sortedRows.length / rowsPerPage)
+  const totalPages = Math.ceil(sortedRows.length / rowsPerPage) || 0
   const start = page * rowsPerPage
   const currentRows = sortedRows.slice(start, start + rowsPerPage)
+
+  // Clamp de página si cambia totalPages (evita páginas vacías tras filtrar)
+  useEffect(() => {
+    setPage(p => Math.min(p, Math.max(totalPages - 1, 0)))
+  }, [totalPages])
 
   const handleSort = (accessor) => {
     setSort(prev =>
@@ -65,8 +72,10 @@ const TableView = ({ config, rowsPerPage: defaultRowsPerPage = 20 }) => {
     setPage(0)
   }
 
+  const handleFirst = () => setPage(0)
   const handlePrev = () => setPage(p => Math.max(p - 1, 0))
-  const handleNext = () => setPage(p => Math.min(p + 1, totalPages - 1))
+  const handleNext = () => setPage(p => Math.min(p + 1, Math.max(totalPages - 1, 0)))
+  const handleLast = () => setPage(Math.max(totalPages - 1, 0))
 
   // Para mobile: selecciona con tap
   const handleRowClick = (idx) => {
@@ -112,25 +121,15 @@ const TableView = ({ config, rowsPerPage: defaultRowsPerPage = 20 }) => {
         </thead>
         <tbody>
           {currentRows?.map((row, idx) => {
-            // Lógica combinada: hovered en desktop, seleccionado en touch
-            const showActions = touchMode
-              ? selectedIdx === start + idx
-              : hoveredIdx === idx
-
+            const showActions = touchMode ? selectedIdx === start + idx : hoveredIdx === idx
             const isActive = showActions
 
             return (
               <tr
                 key={idx}
-                className={
-                  `relative group cursor-pointer transition
-                  ${isActive
-                    ? 'bg-primary/30 text-black'
-                    : idx % 2 === 1
-                      ? 'bg-table_odd'
-                      : ''}
-                  `
-                }
+                className={`relative group cursor-pointer transition
+                  ${isActive ? 'bg-primary/30 text-black'
+                    : idx % 2 === 1 ? 'bg-table_odd' : ''}`}
                 onMouseEnter={() => !touchMode && setHoveredIdx(idx)}
                 onMouseLeave={() => !touchMode && setHoveredIdx(null)}
                 onClick={() => handleRowClick(idx)}
@@ -172,21 +171,43 @@ const TableView = ({ config, rowsPerPage: defaultRowsPerPage = 20 }) => {
       </table>
 
       {/* Paginación */}
-      <div className="flex justify-end items-center gap-4 text-sm text-text">
+      <div className="flex justify-end items-center gap-2 text-sm text-text">
+        <button
+          onClick={handleFirst}
+          disabled={page === 0 || totalPages <= 1}
+          className="px-2 py-1 bg-secondary text-white rounded disabled:opacity-50"
+          title="Primera página"
+        >
+          <FiChevronsLeft className="inline" />
+        </button>
         <button
           onClick={handlePrev}
-          disabled={page === 0}
-          className="px-3 py-1 bg-secondary text-white rounded disabled:opacity-50"
+          disabled={page === 0 || totalPages <= 1}
+          className="px-2 py-1 bg-secondary text-white rounded disabled:opacity-50"
+          title="Anterior"
         >
-          Anterior
+          <FiChevronLeft className="inline" /> <span className="hidden sm:inline">Anterior</span>
         </button>
-        <span>Página {page + 1} de {totalPages}</span>
+
+        <span className="px-2">
+          Página {totalPages === 0 ? 0 : page + 1} de {totalPages}
+        </span>
+
         <button
           onClick={handleNext}
-          disabled={page === totalPages - 1}
-          className="px-3 py-1 bg-secondary text-white rounded disabled:opacity-50"
+          disabled={page >= totalPages - 1 || totalPages <= 1}
+          className="px-2 py-1 bg-secondary text-white rounded disabled:opacity-50"
+          title="Siguiente"
         >
-          Siguiente
+          <span className="hidden sm:inline">Siguiente</span> <FiChevronRight className="inline" />
+        </button>
+        <button
+          onClick={handleLast}
+          disabled={page >= totalPages - 1 || totalPages <= 1}
+          className="px-2 py-1 bg-secondary text-white rounded disabled:opacity-50"
+          title="Última página"
+        >
+          <FiChevronsRight className="inline" />
         </button>
       </div>
     </div>

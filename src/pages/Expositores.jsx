@@ -290,10 +290,10 @@ const handleNuevoClick = () => {
           showBtn1
           btn1Text={t('btn_nuevo') || 'Nuevo'}
           onBtn1Click={handleNuevoClick}
-          showBtn2
+          showBtn2={false}
           btn2Text={t('btn_guardar') || 'Guardar'}
           onBtn2Click={handleGuardarClick}
-          showBtn3
+          showBtn3={false}
           btn3Text={t('btn_cancelar') || 'Cancelar'}
           onBtn3Click={handleCancelarClick}
         />

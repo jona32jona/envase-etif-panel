@@ -21,7 +21,7 @@ const sidebarConfig = [
       },
       {
         to: '/expositores_usuarios',
-        label: 'EXPOSITORES USUARIOS',
+        label: 'USUARIOS EXPOSITORES',
         icon: FiUsers,
         roles: ['admin'],
       },

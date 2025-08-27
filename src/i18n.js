@@ -10,7 +10,8 @@ const resources = {
       btn_nuevo: "New",
       btn_guardar: "Save",
       btn_cancelar: "Cancel",
-      content_expositores: "Companies content..."
+      content_expositores: "Companies content...",
+      header_expositores_usuarios: "USUARIOS EXPOSITORES"
     }
   },
   es: {
@@ -19,7 +20,8 @@ const resources = {
       btn_nuevo: "Nuevo",
       btn_guardar: "Guardar",
       btn_cancelar: "Cancelar",
-      content_expositores: "Lista de expositores..."
+      content_expositores: "Lista de expositores...",
+      header_expositores_usuarios: "USUARIOS EXPOSITORES"
     }
   }
 }
