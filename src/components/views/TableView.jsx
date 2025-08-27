@@ -189,7 +189,7 @@ const TableView = ({ config, rowsPerPage: defaultRowsPerPage = 20 }) => {
           <FiChevronLeft className="inline" /> <span className="hidden sm:inline">Anterior</span>
         </button>
 
-        <span className="px-2">
+        <span className="px-2 bg-secondary">
           Página {totalPages === 0 ? 0 : page + 1} de {totalPages}
         </span>
 

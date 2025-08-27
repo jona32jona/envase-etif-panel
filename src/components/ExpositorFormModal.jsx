@@ -1,9 +1,11 @@
 // src/components/ExpositorFormModal.jsx
 import { useMemo, useState } from 'react'
+import { processLogoToJpegSquare } from '../utils/image/logoTools'
 
 const LOGO_BASE =
   import.meta.env.VITE_EXPOSITORES_LOGO_BASE ||
   'https://envaseetifapp.com.ar/Imagenes/expositores/'
+
 
 const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif']
 
@@ -26,16 +28,29 @@ const ExpositorFormModal = ({ initialData, onSave, onCancel }) => {
     setForm(f => ({ ...f, [name]: type === 'checkbox' ? (checked ? 1 : 0) : value }))
   }
 
-  const handleFile = (e) => {
+  const handleFile = async (e) => {
     const f = e.target.files?.[0]
     if (!f) { setFile(null); return }
-    if (!ACCEPTED_TYPES.includes(f.type)) {
-      setError('El archivo debe ser una imagen válida (png, jpg, webp, gif).')
+    if (!/^image\//.test(f.type)) {
+      setError('El archivo debe ser una imagen.')
       setFile(null)
       return
     }
-    setError(null)
-    setFile(f)
+    try {
+      setError(null)
+      const normalized = await processLogoToJpegSquare(f, {
+        size: 1080,
+        widthPercent: 0.9,
+        background: '#ffffff',
+        quality: 0.92,
+        // filename: 'opcional' // se infiere del original
+      })
+      setFile(normalized) // ← este es el que subís por multipart
+    } catch (err) {
+      console.error('processLogoToJpegSquare error', err)
+      setError('No se pudo procesar la imagen.')
+      setFile(null)
+    }
   }
 
   const handleSubmit = (e) => {
