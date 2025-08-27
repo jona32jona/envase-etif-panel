@@ -95,11 +95,13 @@ export async function createExpositor(values) {
   return mapApiRowToView(created)
 }
 
+
 export async function updateExpositor(values) {
+  console.log('[updateExpositor] payload ->', values) // debería incluir _id
   if (!values?._id) throw new Error('Falta _id para actualizar')
   const payload = { _id: values._id, ...toApiPayload(values) }
   const res = await httpPost(MUTATION_ENDPOINT, payload)
-  // API: { status: "updated", row: { ... } }
+  console.log('[updateExpositor] respuesta ->', res)
   const updated = res?.row || {}
   return mapApiRowToView(updated)
 }

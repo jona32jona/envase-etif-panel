@@ -6,8 +6,8 @@ const Agenda = () => {
   return (
     <div className="flex flex-col justify-between h-full">
       <div>
-        <PageHeader title="Expositores Usuarios" icon={<FiCalendar />} />
-        <p>Contenido de reportes...</p>
+        <PageHeader title="Agenda" icon={<FiCalendar />} />
+        <p>Contenido de Agenda...</p>
       </div>
 
       <PageFooter

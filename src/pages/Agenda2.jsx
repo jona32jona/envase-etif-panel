@@ -37,7 +37,7 @@ const empleadosRandom = empresasArray.map((empresa, i) => ({
   empresa
 }))
 
-const Agenda = () => {
+const Agenda2 = () => {
   const { t } = useTranslation()
   const { show, hide } = useLoading()
   const [footerHeight, setFooterHeight] = useState(0)
@@ -204,4 +204,4 @@ const handleDeleteEmpleado = (empleado) => {
   )
 }
 
-export default Agenda
+export default Agenda2

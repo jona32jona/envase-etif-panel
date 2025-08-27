@@ -53,31 +53,36 @@ const Expositores = () => {
     }
   }, [show, hide])
 
-  // Editar
+// Editar
 // Abrir modal de edición
 const handleEditExpositor = (expositor) => {
   const raw = expositor?._raw ?? expositor
+
   openModal(
     <ExpositorFormModal
       initialData={raw}
       onSave={async (values) => {
-        // validación mínima
         const nombre = (values?.nombre ?? '').trim()
         if (!nombre) {
           alert('El nombre del expositor es obligatorio.')
           return
         }
 
+        // Asegurá que mandamos _id (por si el form no lo adjuntó por algún motivo)
+        const payload = { ...values, _id: values?._id ?? raw?._id }
+
         try {
           show()
-          // values ya trae _id desde el modal (ver cambio 1)
-          const actualizado = await updateExpositor(values)
-          // Reemplazar en la tabla por _id
-          setRows((list) =>
-            list.map((row) => (row._id === actualizado._id ? actualizado : row))
+          const actualizado = await updateExpositor(payload)
+
+          // 👇 Igualdad robusta (string vs number)
+          setRows(list =>
+            list.map(row =>
+              Number(row._id) === Number(actualizado._id) ? actualizado : row
+            )
           )
+
           closeModal()
-          // opcional: alert('Expositor actualizado')
         } catch (err) {
           console.error('[Expositores] update error:', err)
           alert('No se pudo actualizar el expositor. ' + (err?.message || ''))
@@ -125,17 +130,43 @@ const handleDeleteExpositor = (expositor) => {
 
 // Doble click en fila = editar
 const handleRowDoubleClick = (expositor) => {
+   const raw = expositor?._raw ?? expositor
+
   openModal(
     <ExpositorFormModal
-      initialData={expositor?._raw ?? expositor}
-      onSave={(nuevo) => {
-        setRows(list =>
-          list.map(x => (x._id === (expositor._id ?? expositor?._raw?._id) ? { ...x, ...nuevo } : x))
-        )
-        closeModal()
+      initialData={raw}
+      onSave={async (values) => {
+        const nombre = (values?.nombre ?? '').trim()
+        if (!nombre) {
+          alert('El nombre del expositor es obligatorio.')
+          return
+        }
+
+        // Asegurá que mandamos _id (por si el form no lo adjuntó por algún motivo)
+        const payload = { ...values, _id: values?._id ?? raw?._id }
+
+        try {
+          show()
+          const actualizado = await updateExpositor(payload)
+
+          // 👇 Igualdad robusta (string vs number)
+          setRows(list =>
+            list.map(row =>
+              Number(row._id) === Number(actualizado._id) ? actualizado : row
+            )
+          )
+
+          closeModal()
+        } catch (err) {
+          console.error('[Expositores] update error:', err)
+          alert('No se pudo actualizar el expositor. ' + (err?.message || ''))
+        } finally {
+          hide()
+        }
       }}
       onCancel={closeModal}
-    />
+    />,
+    'max-w-5xl w-[96vw]'
   )
 }
 
