@@ -1,3 +1,4 @@
+// src/pages/Expositores.jsx
 import { useEffect, useRef, useState, useLayoutEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import PageHeader from '../components/PageHeader'
@@ -5,7 +6,7 @@ import PageFooter from '../components/PageFooter'
 import SectionView from '../components/SectionView'
 import { FiBriefcase } from 'react-icons/fi'
 import { useLoading } from '../context/LoadingContext'
-import { fetchExpositores, createExpositor, updateExpositor } from '../services/expositores.api'
+import { fetchExpositores, createExpositor, updateExpositor, deleteExpositor  } from '../services/expositores.api'
 import ExpositorFormModal from '../components/ExpositorFormModal'
 import { useModal } from '../context/ModalContext'
 
@@ -23,8 +24,6 @@ const Expositores = () => {
 
   const [rows, setRows] = useState([])
   const [error, setError] = useState(null)
-
-  
 
   useLayoutEffect(() => {
     if (footerRef.current) {
@@ -53,51 +52,47 @@ const Expositores = () => {
     }
   }, [show, hide])
 
-// Editar
-// Abrir modal de edición
-const handleEditExpositor = (expositor) => {
-  const raw = expositor?._raw ?? expositor
+  // Editar
+  const handleEditExpositor = (expositor) => {
+    const raw = expositor?._raw ?? expositor
 
-  openModal(
-    <ExpositorFormModal
-      initialData={raw}
-      onSave={async (values) => {
-        const nombre = (values?.nombre ?? '').trim()
-        if (!nombre) {
-          alert('El nombre del expositor es obligatorio.')
-          return
-        }
+    openModal(
+      <ExpositorFormModal
+        initialData={raw}
+        onSave={async (values, file) => {
+          const nombre = (values?.nombre ?? '').trim()
+          if (!nombre) {
+            alert('El nombre del expositor es obligatorio.')
+            return
+          }
 
-        // Asegurá que mandamos _id (por si el form no lo adjuntó por algún motivo)
-        const payload = { ...values, _id: values?._id ?? raw?._id }
+          // asegurar _id
+          const payload = { ...values, _id: values?._id ?? raw?._id }
 
-        try {
-          show()
-          const actualizado = await updateExpositor(payload)
-
-          // 👇 Igualdad robusta (string vs number)
-          setRows(list =>
-            list.map(row =>
-              Number(row._id) === Number(actualizado._id) ? actualizado : row
+          try {
+            show()
+            const actualizado = await updateExpositor(payload, file)
+            setRows(list =>
+              list.map(row =>
+                Number(row._id) === Number(actualizado._id) ? actualizado : row
+              )
             )
-          )
+            closeModal()
+          } catch (err) {
+            console.error('[Expositores] update error:', err)
+            alert('No se pudo actualizar el expositor. ' + (err?.message || ''))
+          } finally {
+            hide()
+          }
+        }}
+        onCancel={closeModal}
+      />,
+      'max-w-5xl w-[96vw]'
+    )
+  }
 
-          closeModal()
-        } catch (err) {
-          console.error('[Expositores] update error:', err)
-          alert('No se pudo actualizar el expositor. ' + (err?.message || ''))
-        } finally {
-          hide()
-        }
-      }}
-      onCancel={closeModal}
-    />,
-    'max-w-5xl w-[96vw]'
-  )
-}
-
-// Eliminar
-const handleDeleteExpositor = (expositor) => {
+  // Eliminar (mock local)
+  const handleDeleteExpositor = (expositor) => {
   openModal(
     <div className="p-5">
       <h3 className="text-lg font-semibold mb-2">Eliminar expositor</h3>
@@ -106,17 +101,24 @@ const handleDeleteExpositor = (expositor) => {
       </p>
 
       <div className="flex gap-2 mt-6 justify-end">
-        <button
-          onClick={closeModal}
-          className="px-3 py-1.5 rounded bg-gray-200 hover:bg-gray-300"
-        >
+        <button onClick={closeModal} className="px-3 py-1.5 rounded bg-gray-200 hover:bg-gray-300">
           Cancelar
         </button>
         <button
-          onClick={() => {
-            const id = expositor._id ?? expositor?._raw?._id
-            setRows(list => list.filter(x => x._id !== id))
-            closeModal()
+          onClick={async () => {
+            const id = Number(expositor._id ?? expositor?._raw?._id)
+            if (!id) { alert('ID inválido'); return }
+            try {
+              show()
+              await deleteExpositor(id)
+              setRows(list => list.filter(x => Number(x._id) !== id))
+              closeModal()
+            } catch (err) {
+              console.error('[Expositores] delete error:', err)
+              alert('No se pudo eliminar en el servidor. ' + (err?.message || ''))
+            } finally {
+              hide()
+            }
           }}
           className="px-3 py-1.5 rounded bg-red-600 text-white hover:bg-red-700"
         >
@@ -124,53 +126,14 @@ const handleDeleteExpositor = (expositor) => {
         </button>
       </div>
     </div>,
-    'max-w-sm' // modal compacto
+    'max-w-sm'
   )
 }
 
-// Doble click en fila = editar
-const handleRowDoubleClick = (expositor) => {
-   const raw = expositor?._raw ?? expositor
+  // Doble click en fila = editar (usa mismo handler)
+  const handleRowDoubleClick = (expositor) => handleEditExpositor(expositor)
 
-  openModal(
-    <ExpositorFormModal
-      initialData={raw}
-      onSave={async (values) => {
-        const nombre = (values?.nombre ?? '').trim()
-        if (!nombre) {
-          alert('El nombre del expositor es obligatorio.')
-          return
-        }
-
-        // Asegurá que mandamos _id (por si el form no lo adjuntó por algún motivo)
-        const payload = { ...values, _id: values?._id ?? raw?._id }
-
-        try {
-          show()
-          const actualizado = await updateExpositor(payload)
-
-          // 👇 Igualdad robusta (string vs number)
-          setRows(list =>
-            list.map(row =>
-              Number(row._id) === Number(actualizado._id) ? actualizado : row
-            )
-          )
-
-          closeModal()
-        } catch (err) {
-          console.error('[Expositores] update error:', err)
-          alert('No se pudo actualizar el expositor. ' + (err?.message || ''))
-        } finally {
-          hide()
-        }
-      }}
-      onCancel={closeModal}
-    />,
-    'max-w-5xl w-[96vw]'
-  )
-}
-
-  // Filas con nodo de imagen (no lo hago en el service para mantener datos puros)
+  // Filas con logo miniatura
   const viewRows = useMemo(
     () =>
       rows.map((r) => ({
@@ -183,7 +146,6 @@ const handleRowDoubleClick = (expositor) => {
               className="h-8 w-8 object-contain rounded bg-white border border-gray-200"
               loading="lazy"
               onError={(e) => {
-                // si falla, ocultamos la imagen y mostramos un guion
                 e.currentTarget.style.display = 'none'
                 const parent = e.currentTarget.parentElement
                 if (parent && parent.childElementCount === 1) {
@@ -200,36 +162,36 @@ const handleRowDoubleClick = (expositor) => {
     [rows]
   )
 
-  // Acciones footer (demo)
-const handleNuevoClick = () => {
-  openModal(
-    <ExpositorFormModal
-      initialData={null}
-      onSave={async (values) => {
-        // ✅ Validación mínima
-        const nombre = (values?.nombre ?? '').trim()
-        if (!nombre) {
-          alert('El nombre del expositor es obligatorio.')
-          return
-        }
+  // Nuevo
+  const handleNuevoClick = () => {
+    openModal(
+      <ExpositorFormModal
+        initialData={null}
+        onSave={async (values, file) => {
+          const nombre = (values?.nombre ?? '').trim()
+          if (!nombre) {
+            alert('El nombre del expositor es obligatorio.')
+            return
+          }
 
-        try {
-          show()
-          const nuevoRow = await createExpositor({ ...values, nombre })
-          setRows(list => [nuevoRow, ...list])
-          closeModal()
-        } catch (err) {
-          console.error('[Expositores] crear error:', err)
-          alert('No se pudo crear el expositor. ' + (err?.message || ''))
-        } finally {
-          hide()
-        }
-      }}
-      onCancel={closeModal}
-    />,
-    'max-w-5xl w-[96vw]'
-  )
-}
+          try {
+            show()
+            const nuevoRow = await createExpositor({ ...values, nombre }, file)
+            setRows(list => [nuevoRow, ...list])
+            closeModal()
+          } catch (err) {
+            console.error('[Expositores] crear error:', err)
+            alert('No se pudo crear el expositor. ' + (err?.message || ''))
+          } finally {
+            hide()
+          }
+        }}
+        onCancel={closeModal}
+      />,
+      'max-w-5xl w-[96vw]'
+    )
+  }
+
   const handleGuardarClick = () => alert('Guardar Expositor')
   const handleCancelarClick = () => alert('Cancelar')
 
@@ -243,7 +205,7 @@ const handleNuevoClick = () => {
         </p>
       </div>
 
-      {/* Contenido scrollable (espacio para el footer fijo) */}
+      {/* Contenido scrollable */}
       <div
         className="flex-1 overflow-y-auto px-4"
         style={{ paddingBottom: `${footerHeight}px` }}
@@ -258,25 +220,23 @@ const handleNuevoClick = () => {
           type="table"
           config={{
             columns: [
-              { header: 'ID', accessor: '_id' },            // primero el _id
+              { header: 'ID', accessor: '_id' },
               { header: 'Nombre', accessor: 'name' },
               { header: 'Email', accessor: 'email' },
               { header: 'Teléfono', accessor: 'telefono' },
               { header: 'Web', accessor: 'web' },
               { header: 'Marcas', accessor: 'marcas' },
-              // Dirección separada
               { header: 'Domicilio', accessor: 'domicilio' },
               { header: 'CP', accessor: 'cp' },
               { header: 'Localidad', accessor: 'localidad' },
               { header: 'Provincia', accessor: 'provincia' },
               { header: 'País', accessor: 'pais' },
-              // Otros
               { header: 'Descripción', accessor: 'descripcion' },
               { header: 'Descripción Ingles', accessor: 'descripcion_i' },
               { header: 'Activo', accessor: 'activo' },
-              { header: 'Logo', accessor: 'logoNode' },      // miniatura
+              { header: 'Logo', accessor: 'logoNode' },
             ],
-            rows: viewRows,                 // o rows, si no generaste viewRows
+            rows: viewRows,
             onRowDoubleClick: handleRowDoubleClick,
             onEdit: handleEditExpositor,
             onDelete: handleDeleteExpositor,

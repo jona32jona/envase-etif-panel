@@ -11,7 +11,8 @@ const resources = {
       btn_guardar: "Save",
       btn_cancelar: "Cancel",
       content_expositores: "Companies content...",
-      header_expositores_usuarios: "USUARIOS EXPOSITORES"
+      header_expositores_usuarios: "USUARIOS EXPOSITORES",
+      content_expositores_usuarios: "Manage users linked to each exhibitor: create/edit/delete, role assignment, and approval of requests."
     }
   },
   es: {
@@ -21,7 +22,8 @@ const resources = {
       btn_guardar: "Guardar",
       btn_cancelar: "Cancelar",
       content_expositores: "Lista de expositores...",
-      header_expositores_usuarios: "USUARIOS EXPOSITORES"
+      header_expositores_usuarios: "USUARIOS EXPOSITORES",
+      content_expositores_usuarios: "Administrá los usuarios asociados a cada expositor: alta/edición/baja, asignación de roles y aprobación de solicitudes."
     }
   }
 }

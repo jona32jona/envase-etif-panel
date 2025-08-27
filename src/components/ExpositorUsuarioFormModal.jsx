@@ -2,22 +2,46 @@
 import { useEffect, useMemo, useState } from 'react'
 import { FiSearch, FiX } from 'react-icons/fi'
 
+// Helpers de fecha (YYYY-MM-DD) y normalización
+function todayYYYYMMDD() {
+  const d = new Date()
+  const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+  return local.toISOString().slice(0, 10)
+}
+function normalizeDateInput(v) {
+  if (!v) return ''
+  const s = String(v)
+  // soporta "2025-08-10", "2025-08-10T12:34:56", "2025-08-10 12:34:56"
+  return s.length >= 10 ? s.slice(0, 10) : s
+}
+
+const random6 = () => String(Math.floor(Math.random() * 1_000_000)).padStart(6, '0')
+
 const ExpositorUsuarioFormModal = ({ initialData, expositoresOptions = [], onSave, onCancel }) => {
   const isEdit = Boolean(initialData?._id)
+  const defaultDate = useMemo(
+    () => normalizeDateInput(initialData?.fecha_codigo) || todayYYYYMMDD(),
+    [initialData?.fecha_codigo]
+  )
 
   const [form, setForm] = useState(() => ({
     _id: initialData?._id ?? null,
     // 👇 guardamos como string para el <select>
-    id_expositor: initialData?.id_expositor != null
-      ? String(initialData.id_expositor)
-      : initialData?.expositor_id != null
-        ? String(initialData.expositor_id)
-        : '',
+    id_expositor:
+      initialData?.id_expositor != null
+        ? String(initialData.id_expositor)
+        : initialData?.expositor_id != null
+          ? String(initialData.expositor_id)
+          : '',
     email: initialData?.email ?? '',
     nombre: initialData?.nombre ?? initialData?.name ?? '',
-    admin: initialData?.admin === 1 || initialData?.admin === '1' || initialData?.admin === true,
-    codigo: initialData?.codigo ?? '',
-    fecha_codigo: initialData?.fecha_codigo ?? '',
+    admin:
+      initialData?.admin === 1 ||
+      initialData?.admin === '1' ||
+      initialData?.admin === true,
+    codigo: initialData?.codigo ? String(initialData.codigo) : random6(),
+    // por defecto: HOY
+    fecha_codigo: defaultDate,
   }))
 
   const [expositores, setExpositores] = useState(() => expositoresOptions)
@@ -40,12 +64,21 @@ const ExpositorUsuarioFormModal = ({ initialData, expositoresOptions = [], onSav
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
+
+    // Restringimos el código a solo dígitos y máx 6
+    if (name === 'codigo') {
+      const digits = String(value).replace(/\D/g, '').slice(0, 6)
+      setForm(f => ({ ...f, codigo: digits }))
+      return
+    }
+
     setForm(f => ({
       ...f,
       [name]: type === 'checkbox' ? (checked ? 1 : 0) : value
     }))
   }
 
+  // Opciones filtradas (incluye el seleccionado aunque no matchee el filtro)
   const filteredOptions = useMemo(() => {
     const q = search.trim().toLowerCase()
     let opts = Array.isArray(expositores) ? expositores : []
@@ -80,26 +113,33 @@ const ExpositorUsuarioFormModal = ({ initialData, expositoresOptions = [], onSav
     return deduped
   }, [search, expositores, form.id_expositor, initialData?.nombre_expositor])
 
+  // Validaciones obligatorias:
+  // - expositor seleccionado
+  // - email válido básico
+  // - código: exactamente 6 dígitos
+  // - fecha: no vacía
   const canSubmit = useMemo(() => {
     const email = String(form.email || '').trim()
     const expositorOk = Number(form.id_expositor) > 0
-    return expositorOk && email.length > 3 && email.includes('@')
-  }, [form.email, form.id_expositor])
+    const codigoOk = /^\d{6}$/.test(String(form.codigo || ''))
+    const fechaOk = Boolean(String(form.fecha_codigo || '').trim())
+    return expositorOk && email.length > 3 && email.includes('@') && codigoOk && fechaOk
+  }, [form.email, form.id_expositor, form.codigo, form.fecha_codigo])
 
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!canSubmit) {
-      alert('Completá al menos Expositor y Email válidos.')
+      alert('Completá Expositor, Email, Código (6 dígitos) y Fecha.')
       return
     }
     const payload = {
       _id: form._id ?? undefined,
-      id_expositor: Number(form.id_expositor), // 👈 aquí lo convertimos a número
+      id_expositor: Number(form.id_expositor),
       email: String(form.email || '').trim(),
       nombre: String(form.nombre || '').trim(),
       admin: form.admin ? 1 : 0,
-      codigo: String(form.codigo || '').trim() || undefined,
-      fecha_codigo: String(form.fecha_codigo || '').trim() || undefined,
+      codigo: String(form.codigo || '').trim(),          // requerido (6 dígitos)
+      fecha_codigo: String(form.fecha_codigo || '').trim(), // requerido (por defecto hoy)
     }
     onSave(payload)
   }
@@ -134,7 +174,7 @@ const ExpositorUsuarioFormModal = ({ initialData, expositoresOptions = [], onSav
         {/* Relación con Expositor */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-w-0">
           <div className="min-w-0">
-            <label className="block text-sm text-gray-600 mb-1">Expositor</label>
+            <label className="block text-sm text-gray-600 mb-1">Expositor <span className="text-red-600">*</span></label>
 
             {/* Buscador del combo */}
             <div className="flex items-center gap-2 mb-2">
@@ -194,7 +234,7 @@ const ExpositorUsuarioFormModal = ({ initialData, expositoresOptions = [], onSav
         {/* Datos del usuario */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-w-0">
           <div className="min-w-0">
-            <label className="block text-sm text-gray-600 mb-1">Email</label>
+            <label className="block text-sm text-gray-600 mb-1">Email <span className="text-red-600">*</span></label>
             <input
               type="email"
               name="email"
@@ -216,26 +256,31 @@ const ExpositorUsuarioFormModal = ({ initialData, expositoresOptions = [], onSav
           </div>
         </div>
 
-        {/* Código (opcional / informativo) */}
+        {/* Código + Fecha (requeridos) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-w-0">
           <div className="min-w-0">
-            <label className="block text-sm text-gray-600 mb-1">Código</label>
+            <label className="block text-sm text-gray-600 mb-1">Código (6 dígitos) <span className="text-red-600">*</span></label>
             <input
               name="codigo"
               value={form.codigo || ''}
               onChange={handleChange}
               className="border p-2 w-full rounded"
-              placeholder="Código de verificación (opcional)"
+              placeholder="000000"
+              inputMode="numeric"
+              pattern="[0-9]{6}"
+              maxLength={6}
+              required
             />
           </div>
           <div className="min-w-0">
-            <label className="block text-sm text-gray-600 mb-1">Fecha Código</label>
+            <label className="block text-sm text-gray-600 mb-1">Fecha Código <span className="text-red-600">*</span></label>
             <input
               type="date"
               name="fecha_codigo"
               value={form.fecha_codigo || ''}
               onChange={handleChange}
               className="border p-2 w-full rounded"
+              required
             />
           </div>
         </div>

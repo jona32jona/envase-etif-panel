@@ -5,6 +5,8 @@ const LOGO_BASE =
   import.meta.env.VITE_EXPOSITORES_LOGO_BASE ||
   'https://envaseetifapp.com.ar/Imagenes/expositores/'
 
+const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif']
+
 const ExpositorFormModal = ({ initialData, onSave, onCancel }) => {
   const isEdit = Boolean(initialData?._id)
   const [form, setForm] = useState(
@@ -15,30 +17,50 @@ const ExpositorFormModal = ({ initialData, onSave, onCancel }) => {
     }
   )
 
+  // Nuevo: archivo seleccionado para el logo (opcional)
+  const [file, setFile] = useState(null)
+  const [error, setError] = useState(null)
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
     setForm(f => ({ ...f, [name]: type === 'checkbox' ? (checked ? 1 : 0) : value }))
   }
 
-const handleSubmit = (e) => {
-  e.preventDefault()
-  const payload = Object.fromEntries(
-    Object.entries(form).map(([k, v]) => [k, typeof v === 'string' ? v.trim() : v])
-  )
-  payload.activo = form.activo ? 1 : 0
-
-  // 👇 importante: si es edición, mandamos el _id
-  if (initialData?._id) {
-    payload._id = initialData._id
+  const handleFile = (e) => {
+    const f = e.target.files?.[0]
+    if (!f) { setFile(null); return }
+    if (!ACCEPTED_TYPES.includes(f.type)) {
+      setError('El archivo debe ser una imagen válida (png, jpg, webp, gif).')
+      setFile(null)
+      return
+    }
+    setError(null)
+    setFile(f)
   }
 
-  onSave(payload)
-}
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    const payload = Object.fromEntries(
+      Object.entries(form).map(([k, v]) => [k, typeof v === 'string' ? v.trim() : v])
+    )
+    payload.activo = form.activo ? 1 : 0
 
-  const logoUrl = useMemo(() => (form.logo ? `${LOGO_BASE}${form.logo}` : ''), [form.logo])
+    // 👇 importante: si es edición, mandamos el _id
+    if (initialData?._id) {
+      payload._id = initialData._id
+    }
+
+    // Ahora devolvemos (payload, file) -> la page decide JSON o multipart
+    onSave(payload, file)
+  }
+
+  // Preview: si hay archivo nuevo, mostrarlo; si no, mostrar el logo existente (si hay)
+  const previewUrl = useMemo(() => {
+    if (file) return URL.createObjectURL(file)
+    return form.logo ? `${LOGO_BASE}${form.logo}` : ''
+  }, [file, form.logo])
 
   return (
-    // w-full: deja que GlobalModal decida el ancho mediante className
     <form onSubmit={handleSubmit} className="w-full h-full flex flex-col min-h-0">
       {/* header */}
       <div className="pb-3 px-4 pt-4 pr-10 border-b bg-white shrink-0">
@@ -54,6 +76,12 @@ const handleSubmit = (e) => {
 
       {/* body scrolleable */}
       <div className="flex-1 min-h-0 px-4 py-4 space-y-4">
+        {error && (
+          <div className="p-2 text-sm border border-red-300 bg-red-50 text-red-700 rounded">
+            {error}
+          </div>
+        )}
+
         {/* Datos principales */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-w-0">
           <div className="min-w-0">
@@ -116,16 +144,36 @@ const handleSubmit = (e) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end min-w-0">
           <div className="min-w-0">
             <label className="block text-sm text-gray-600 mb-1">Logo (archivo)</label>
-            <input className="border p-2 w-full rounded" name="logo" value={form.logo || ''} onChange={handleChange} placeholder="ej: empresa.png" />
-            {form.logo ? (
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFile}
+              className="block w-full text-sm text-gray-700 file:mr-3 file:px-3 file:py-1.5 file:rounded file:border-0 file:bg-secondary file:text-white hover:file:bg-secondary/90"
+            />
+            <p className="text-xs text-gray-500 mt-1">Si subís un archivo, se ignora el nombre de archivo manual.</p>
+
+            {/* Campo de texto para compatibilidad (opcional) */}
+            <label className="block text-sm text-gray-600 mt-3 mb-1">Logo (nombre de archivo)</label>
+            <input
+              className="border p-2 w-full rounded"
+              name="logo"
+              value={form.logo || ''}
+              onChange={handleChange}
+              placeholder="ej: empresa.png"
+            />
+
+            {/* Preview */}
+            {previewUrl ? (
               <div className="mt-2">
                 <img
-                  src={logoUrl}
+                  src={previewUrl}
                   alt="Logo expositor"
                   className="h-12 w-12 object-contain rounded bg-white border border-gray-200"
                   onError={(e) => (e.currentTarget.style.display = 'none')}
                 />
-                <p className="text-xs text-gray-500 break-all">{logoUrl}</p>
+                {!file && form.logo && (
+                  <p className="text-xs text-gray-500 break-all">{LOGO_BASE}{form.logo}</p>
+                )}
               </div>
             ) : (
               <p className="text-xs text-gray-400 mt-1">No hay logo cargado.</p>
